@@ -2,10 +2,17 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Question;
 
 class TestCheckRequest extends ApiRequest
 {
+    const RULES = [
+        'text' => ['data' => 'string'],
+        'single' => ['data' => 'exists:answers,id'],
+        'multiple' => ['data' => 'array|min:1', 'data.*' => 'integer|exists:answers,id'],
+        'matching' => ['data' => 'array|min:1', 'data.*.id' => 'required|exists:answers,id', 'data.*.value' => 'required|string'],
+    ];
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -17,13 +24,19 @@ class TestCheckRequest extends ApiRequest
             'name' => 'required|string',
             'time' => 'required|date_format:H:i:s',
             'data' => 'required|array',
-            'data.*.question_id' => 'required|exists:questions,id',
-            'data.*.answer' => 'nullable|string',
-            'data.*.id' => 'nullable|integer|exists:answers,id',
-            'data.*.ids' => 'nullable|array|min:1',
-            'data.*.ids.*' => 'integer|exists:answers,id',
-            'data.*.answers.*.id' => 'required|exists:answers,id',
-            'data.*.answers.*.value' => 'required|string',
+            'data.*.id' => 'required|exists:questions,id',
+            'data.*.value' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    $index = explode('.', $attribute)[1];
+                    $item = $this->request->get('data')[$index];
+                    $type = @Question::find($item['id'])->type ?? null;
+                    $validator = validator(['data' => $value], static::RULES[$type]);
+                    if ($validator->fails()) {
+                        $fail($validator->errors()->first());
+                    }
+                },
+            ]
         ];
     }
 }

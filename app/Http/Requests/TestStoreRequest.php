@@ -19,7 +19,7 @@ class TestStoreRequest extends ApiRequest
             'questions' => 'required|array|min:1',
             'questions.*.question' => 'required|string',
             'questions.*.type' => 'required|string|in:single,multiple,text,matching',
-            'questions.*.answer' => 'required_if:questions.*.type,text|string',
+            'questions.*.answer' => 'required_if:questions.*.type,text|nullable|string',
             'questions.*.answers' => 'exclude_if:questions.*.type,text|required|array|min:1',
             'questions.*.answers.*.key' => 'required_if:questions.*.type,matching|string',
             'questions.*.answers.*.value' => 'required|string',
@@ -28,6 +28,22 @@ class TestStoreRequest extends ApiRequest
             'ratings.*.text' => 'required|string',
             'ratings.*.min' => 'required|between:0,100',
             'ratings.*.max' => 'required|between:0,100|gt:ratings.*.min',
+        ];
+    }
+
+    public function attributes()
+    {
+        return [
+            'questions.*.question' => '',
+            'questions.*.type' => '',
+            'questions.*.answer' => '',
+            'questions.*.answers' => '',
+            'questions.*.answers.*.key' => '',
+            'questions.*.answers.*.value' => '',
+            'questions.*.answers.*.is_correct' => '',
+            'ratings.*.text' => '',
+            'ratings.*.min' => '',
+            'ratings.*.max' => '',
         ];
     }
 }

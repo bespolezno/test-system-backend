@@ -22,33 +22,53 @@ class Question extends Model
         $answers = collect($answers);
 
         if ($this->type === 'text') {
-            return $answers
-                    ->where('question_id', '=', $this->id)
-                    ->where('answer', '=', $this->answer)
-                    ->count() === 1;
+            return [
+                'id' => $this->id,
+                'correct_answer' => $this->answer,
+                'is_correct' => $answers
+                        ->where('id', '=', $this->id)
+                        ->where('value', '=', $this->answer)
+                        ->count() === 1
+            ];
         }
 
-        $answer = $answers->where('question_id', '=', $this->id)->first();
+        $answer = $answers->where('id', '=', $this->id)->first();
 
         if (!$answer) {
-            return false;
+            return  [
+                'id' => $this->id,
+                'correct_answer' => null,
+                'is_correct' => false
+            ];
         }
 
         switch ($this->type) {
             case 'single':
                 $correctAnswer = $this->answers()->where(['is_correct' => true])->first();
-                return @$correctAnswer->id === $answer['id'];
+                return  [
+                    'id' => $this->id,
+                    'correct_answer' => @$correctAnswer->id,
+                    'is_correct' => @$correctAnswer->id === $answer->value
+                ];
             case 'multiple':
                 $ans = $this->answers;
                 $correctCount = $ans->filter(fn($a) => $a->is_correct)->count();
-                return $correctCount === count($answer['ids']) &&
-                    collect($answer['ids'])->every(fn($id) => @$ans->firstWhere('id', '=', $id)->is_correct);
+                return [
+                    'id' => $this->id,
+                    'correct_answer' => $ans->map->id,
+                    'is_correct' => $correctCount === count($answer->value) &&
+                        collect($answer->value)->every(fn($id) => @$ans->firstWhere('id', '=', $id)->is_correct)
+                ];
             case 'matching':
-                return $this->answers->every(fn($a) => collect($answer['answers'])
-                    ->where('id', '=', $a->id)
-                    ->where('value', '=', $a->value)
-                    ->count() === 1
-                );
+                return [
+                    'id' => $this->id,
+                    'correct_answer' => $this->answers->map(fn($answer) => ['id' => $answer->id, 'value' => $answer->value]),
+                    'is_correct' => $this->answers->every(fn($a) => collect($answer->value)
+                            ->where('id', '=', $a->id)
+                            ->where('value', '=', $a->value)
+                            ->count() === 1
+                    )
+                ];
             default:
                 return false;
         }

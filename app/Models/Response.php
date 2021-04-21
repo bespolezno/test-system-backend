@@ -9,6 +9,7 @@ class Response extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    public $checkData = null;
 
     public function test()
     {

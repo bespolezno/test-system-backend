@@ -15,6 +15,7 @@ class ResponseResource extends JsonResource
      */
     public function toArray($request)
     {
+        $data = json_decode($this->data);
         $total = $this->test->questions()->count();
         $correct = round($this->correct_answers / $total * 100);
         return [
@@ -27,7 +28,8 @@ class ResponseResource extends JsonResource
             'total_questions' => $total,
             'correct' => $correct,
             'rating' => $this->test->getRating($correct),
-            'data' => json_decode($this->data),
+            'data' => $data,
+            'checkData' => $this->test->questions->map(fn($question) => $question->check($data)),
         ];
     }
 }

@@ -18,8 +18,7 @@ class QuestionResource extends JsonResource
             'id' => $this->id,
             'question' => $this->question,
             'type' => $this->type,
-            'answer' => $this->answer,
-            'answers' => AnswerResource::collection($this->answers),
+            'answer' => $this->type === 'text' ? $this->answer : AnswerResource::collection($this->answers),
         ];
     }
 }

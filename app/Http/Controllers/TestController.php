@@ -49,12 +49,12 @@ class TestController extends Controller
 
     public function check(TestCheckRequest $request, Test $test)
     {
-        $check = $test->questions->filter(fn(Question $question) => $question->check($request->data))->count();
+        $check = $test->questions->map(fn(Question $question) => $question->check($request->data));
         $response = Response::create(array_merge(
             $request->only(['name', 'time']),
             [
                 'ip' => $request->ip(),
-                'correct_answers' => $check,
+                'correct_answers' => $check->filter(fn($el) => $el['is_correct'])->count(),
                 'data' => json_encode($request->data),
                 'test_id' => $test->id
             ]
